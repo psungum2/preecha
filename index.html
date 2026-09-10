@@ -1,354 +1,381 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-<title>AR ชิงช้าสวรรค์</title>
+<meta charset="UTF-8">
+<title>AR ชิงช้าสวรรค์ · Hiro Marker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
-<script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+<!--
+  วิธีใช้งาน
+  1) ไฟล์นี้ต้องรันผ่านเว็บเซิร์ฟเวอร์ (http:// หรือ https://) เบราว์เซอร์จะบล็อกกล้องถ้าเปิดแบบไฟล์ตรง ๆ (file://)
+     ตัวอย่างการรันแบบเร็ว ๆ ในโฟลเดอร์ที่มีไฟล์นี้:
+       - Python:  python -m http.server 8080   แล้วเปิด http://localhost:8080
+       - Node:    npx serve .
+       - VS Code: ใช้ส่วนขยาย Live Server
+  2) เตรียมภาพ Hiro Marker ไปแสดงอีกจอ/ปรินท์ออกมา:
+       https://raw.githubusercontent.com/AR-js-org/AR.js/master/data/images/hiro.png
+  3) เปิดหน้านี้บนอุปกรณ์ที่มีกล้อง อนุญาตสิทธิ์กล้อง แล้วส่องไปที่ Hiro Marker
+     จะเห็นชิงช้าสวรรค์ปรากฏขึ้น พร้อมแผงควบคุมด้านล่างจอ
+-->
+
+<script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 
 <style>
-  html, body { margin: 0; height: 100%; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
-
-  #ui {
-    position: fixed;
-    left: 0; right: 0; bottom: 0;
-    z-index: 9999;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    padding: 14px 10px 20px;
-    background: linear-gradient(to top, rgba(0,0,0,0.65), rgba(0,0,0,0));
-    pointer-events: none;
-  }
-  #ui * { pointer-events: auto; }
-
-  #title {
-    position: fixed;
-    top: 10px; left: 0; right: 0;
-    z-index: 9999;
-    text-align: center;
-    color: #fff;
-    font-size: 15px;
-    text-shadow: 0 1px 4px rgba(0,0,0,0.8);
-    pointer-events: none;
+  :root{
+    --bg-night:#0b1220;
+    --panel-1:#1b2740;
+    --panel-2:#111a2e;
+    --line:#2c3a5c;
+    --ivory:#f4f1ea;
+    --muted:#93a1c2;
+    --amber:#ffc145;
+    --teal:#2ec4b6;
+    --coral:#e4572e;
   }
 
-  .speed-row { display: flex; gap: 8px; }
+  html, body{
+    margin:0; height:100%; background:#000; overflow:hidden;
+    font-family:'Inter', system-ui, sans-serif;
+  }
+  a-scene{ position:fixed; inset:0; }
 
-  button {
-    border: none;
-    border-radius: 10px;
-    padding: 10px 16px;
-    font-size: 14px;
-    font-weight: 600;
-    background: #ffffff;
-    color: #222;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.35);
-  }
-  button.active {
-    background: #2e86de;
-    color: #fff;
-  }
-  #playPauseBtn {
-    background: #e74c3c;
-    color: #fff;
-    min-width: 110px;
-  }
-  #playPauseBtn.paused {
-    background: #27ae60;
+  button, input{ font-family:inherit; }
+  button:focus-visible, input:focus-visible{
+    outline:2px solid var(--teal); outline-offset:2px;
   }
 
-  .slider-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 90%;
-    max-width: 380px;
-    color: #fff;
-    font-size: 13px;
-    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+  #ui{
+    position:fixed; left:0; right:0; bottom:0; z-index:20;
+    color:var(--ivory);
+    text-shadow:none;
   }
-  #speedSlider { flex: 1; }
+
+  .marquee{
+    display:flex; align-items:center; gap:10px;
+    padding:8px 16px;
+    background:linear-gradient(180deg, var(--panel-1), var(--panel-2));
+    border-top:1px solid var(--line);
+  }
+  .marquee .title{
+    font-family:'Baloo 2', cursive; font-weight:700; font-size:16px; letter-spacing:.2px;
+  }
+  .marquee .hint{ margin-left:auto; font-size:12px; color:var(--muted); }
+  .dot{
+    width:9px; height:9px; border-radius:50%;
+    background:#5a3d1f; box-shadow:0 0 0 3px rgba(255,193,69,.08);
+    transition:background .25s, box-shadow .25s;
+    flex:none;
+  }
+  .dot.found{ background:var(--teal); box-shadow:0 0 10px 2px var(--teal); }
+
+  .console{
+    display:flex;
+    background:var(--panel-2);
+    border-top:1px solid var(--line);
+    padding:14px 10px calc(14px + env(safe-area-inset-bottom));
+  }
+  .cluster{
+    flex:1; min-width:0;
+    display:flex; flex-direction:column; align-items:center; gap:8px;
+    padding:0 10px;
+  }
+  .cluster + .cluster{ border-left:1px solid var(--line); }
+  .cluster label{
+    font-family:'Baloo 2', cursive; font-size:13px; color:var(--muted); font-weight:500;
+  }
+
+  #speedSlider{
+    -webkit-appearance:none; appearance:none; width:100%; height:6px; border-radius:3px;
+    background:linear-gradient(90deg, var(--teal), var(--amber), var(--coral));
+    outline:none; cursor:pointer;
+  }
+  #speedSlider::-webkit-slider-thumb{
+    -webkit-appearance:none; width:20px; height:20px; border-radius:50%;
+    background:var(--ivory); border:3px solid var(--panel-2);
+    box-shadow:0 0 0 2px var(--line); cursor:pointer;
+  }
+  #speedSlider::-moz-range-thumb{
+    width:20px; height:20px; border-radius:50%;
+    background:var(--ivory); border:3px solid var(--panel-2); cursor:pointer;
+  }
+  .readout{ font-variant-numeric:tabular-nums; font-size:13px; }
+  .presets{ display:flex; gap:4px; flex-wrap:wrap; justify-content:center; }
+  .presets button{
+    border:1px solid var(--line); background:var(--panel-1); color:var(--ivory);
+    font-size:11px; padding:4px 9px; border-radius:10px; cursor:pointer;
+  }
+  .presets button:active{ background:var(--teal); color:var(--panel-2); }
+
+  .switch{
+    width:52px; height:28px; border-radius:16px; background:#2a3350;
+    border:1px solid var(--line); position:relative; cursor:pointer; padding:0;
+  }
+  .switch .knob{
+    position:absolute; top:2px; left:2px; width:22px; height:22px; border-radius:50%;
+    background:#7c88a8; transition:left .2s ease, background .2s ease, box-shadow .2s ease;
+  }
+  .switch.on{ background:linear-gradient(90deg, var(--amber), var(--coral)); }
+  .switch.on .knob{ left:26px; background:#fff8ec; box-shadow:0 0 8px 2px rgba(255,193,69,.8); }
+  .state{ font-size:12px; color:var(--muted); }
+
+  .swatches{ display:flex; gap:6px; }
+  .swatch{
+    --c:#ffc145;
+    width:26px; height:26px; border-radius:50%; padding:0; cursor:pointer;
+    border:2px solid rgba(255,255,255,.25);
+    background:radial-gradient(circle at 35% 30%, #ffffffaa, var(--c) 60%);
+  }
+  .swatch.active{ border-color:var(--ivory); box-shadow:0 0 0 2px var(--ivory); }
+  #customColor{
+    width:26px; height:26px; padding:0; border:none; border-radius:50%; cursor:pointer; background:none;
+  }
+  .color-row{ display:flex; align-items:center; gap:8px; }
+
+  @media (max-width:420px){
+    .console{ flex-wrap:wrap; }
+    .cluster{ flex:1 1 45%; border-left:none; margin-bottom:6px; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .switch .knob{ transition:none; }
+    .dot{ transition:none; }
+  }
 </style>
 </head>
+<body>
 
-<body style="margin:0; overflow:hidden;">
+<a-scene
+  vr-mode-ui="enabled: false"
+  renderer="antialias: true; alpha: true"
+  embedded
+  arjs="sourceType: webcam; detectionMode: mono_and_matrix; matrixCodeType: 3x3; debugUIEnabled: false;">
 
-  <div id="title">ส่อง Hiro Marker เพื่อดูชิงช้าสวรรค์ AR</div>
+  <a-marker id="hiroMarker" preset="hiro" emitevents="true">
 
-  <div id="ui">
-    <div class="slider-row">
-      <span>ช้า</span>
-      <input type="range" id="speedSlider" min="0" max="300" value="60">
-      <span>เร็ว</span>
-    </div>
-    <div class="speed-row">
-      <button id="btnSlow" onclick="setPreset(25, this)">ช้ามาก</button>
-      <button id="btnMed" class="active" onclick="setPreset(60, this)">ปกติ</button>
-      <button id="btnFast" onclick="setPreset(140, this)">เร็ว</button>
-      <button id="btnTurbo" onclick="setPreset(260, this)">เร็วมาก</button>
-    </div>
-    <button id="playPauseBtn" onclick="togglePlay()">⏸ หยุดหมุน</button>
+    <!-- ฐานตั้ง -->
+    <a-cylinder position="0 0.005 -0.05" radius="0.16" height="0.01"
+                color="#242b3d" metalness="0.3" roughness="0.7"></a-cylinder>
+    <a-cylinder position="0 0.15 -0.05" radius="0.018" height="0.3"
+                color="#2c3446" metalness="0.4" roughness="0.6"></a-cylinder>
+
+    <!-- ตัวชิงช้าสวรรค์ (หมุนรอบแกน Z ให้ตั้งขึ้นเหมือนของจริง) -->
+    <a-entity id="wheelGroup" position="0 0.3 -0.05">
+      <a-cylinder id="hub" radius="0.035" height="0.05" rotation="90 0 0"
+                  color="#2b2f3a" metalness="0.6" roughness="0.4"></a-cylinder>
+      <a-torus id="rim" radius="0.26" radius-tubular="0.014"
+               color="#3a4256" metalness="0.5" roughness="0.4"></a-torus>
+      <a-entity id="spokes"></a-entity>
+      <a-entity id="cabins"></a-entity>
+      <a-entity id="bulbs"></a-entity>
+    </a-entity>
+
+    <a-entity light="type: point; intensity: 0.5; distance: 3" position="0 0.6 0.4"></a-entity>
+  </a-marker>
+
+  <a-entity light="type: ambient; color: #8f97ad; intensity: 0.9"></a-entity>
+  <a-entity camera></a-entity>
+</a-scene>
+
+<div id="ui">
+  <div class="marquee">
+    <span class="dot" id="statusDot"></span>
+    <span class="title">ควบคุมชิงช้าสวรรค์ AR</span>
+    <span class="hint" id="hint">ส่องกล้องไปที่ Hiro Marker</span>
   </div>
 
-  <a-scene
-    embedded
-    vr-mode-ui="enabled: false"
-    renderer="logarithmicDepthBuffer: true; precision: medium;"
-    arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
+  <div class="console">
+    <div class="cluster">
+      <label>ความเร็วหมุน</label>
+      <input type="range" id="speedSlider" min="0" max="200" value="0" step="1"
+             aria-label="ปรับความเร็วการหมุน">
+      <div class="readout"><span id="speedValue">0</span>°/วิ</div>
+      <div class="presets">
+        <button type="button" data-speed="0">หยุด</button>
+        <button type="button" data-speed="30">ช้า</button>
+        <button type="button" data-speed="90">ปานกลาง</button>
+        <button type="button" data-speed="180">เร็ว</button>
+      </div>
+    </div>
 
-    <a-assets></a-assets>
+    <div class="cluster">
+      <label>ไฟหลอด</label>
+      <button type="button" id="powerToggle" class="switch" aria-pressed="false" aria-label="เปิด/ปิดไฟ">
+        <span class="knob"></span>
+      </button>
+      <div class="state" id="powerState">ปิด</div>
+    </div>
 
-    <a-marker preset="hiro" id="marker">
-      <!-- โครงสร้างทั้งหมดยืนตั้งฉากบน marker เหมือนชิงช้าสวรรค์จริง -->
-      <a-entity id="ferrisGroup" position="0 0 0" scale="0.75 0.75 0.75">
+    <div class="cluster">
+      <label>สีหลอดไฟ</label>
+      <div class="swatches">
+        <button type="button" class="swatch" style="--c:#ffc145" data-color="#ffc145" aria-label="สีเหลืองอำพัน"></button>
+        <button type="button" class="swatch" style="--c:#e4572e" data-color="#e4572e" aria-label="สีส้มแดง"></button>
+        <button type="button" class="swatch" style="--c:#2ec4b6" data-color="#2ec4b6" aria-label="สีเขียวอมฟ้า"></button>
+        <button type="button" class="swatch" style="--c:#8e7cff" data-color="#8e7cff" aria-label="สีม่วง"></button>
+        <button type="button" class="swatch" style="--c:#ff6fb0" data-color="#ff6fb0" aria-label="สีชมพู"></button>
+      </div>
+      <div class="color-row">
+        <input type="color" id="customColor" value="#ffc145" aria-label="เลือกสีเอง">
+      </div>
+    </div>
+  </div>
+</div>
 
-        <!-- ขาตั้ง + เพลากลาง สร้างด้วยสคริปต์ (คงที่ ไม่หมุน) -->
-        <a-entity id="supports"></a-entity>
+<script>
+(function () {
+  'use strict';
 
-        <!-- ============ ล้อชิงช้าสวรรค์ (หมุนได้) ============ -->
-        <a-entity id="wheel" position="0 0.6 0" spin="speed: 60; axis: z">
-          <!-- วงแหวนซ้อนชั้นแบบชิงช้าสวรรค์จริง -->
-          <a-torus radius="0.44" radius-tubular="0.020" rotation="90 0 0"
-                   color="#e74c3c" segments-tubular="32"></a-torus>
-          <a-torus radius="0.39" radius-tubular="0.013" rotation="90 0 0"
-                   color="#95a5a6" segments-tubular="32"></a-torus>
-          <a-torus radius="0.34" radius-tubular="0.011" rotation="90 0 0"
-                   color="#8e44ad" segments-tubular="32"></a-torus>
-          <!-- ดุมกลางแบบวงแหวนมีรู -->
-          <a-torus radius="0.09" radius-tubular="0.032" rotation="90 0 0"
-                   color="#e67e22"></a-torus>
-          <a-sphere radius="0.025" color="#2d3436"></a-sphere>
-          <a-entity id="spokesAndCabins"></a-entity>
-        </a-entity>
+  var RADIUS = 0.26;
+  var NUM_CABINS = 8;
+  var NUM_BULBS = 16;
+  var currentColor = '#ffc145';
+  var lightsOn = false;
 
-      </a-entity>
-    </a-marker>
+  // หมุนวงล้อรอบแกน Z ด้วยความเร็ว (องศา/วินาที) ที่กำหนดผ่านแผงควบคุม
+  AFRAME.registerComponent('wheel-spin', {
+    schema: { speed: { type: 'number', default: 0 } },
+    tick: function (t, dt) {
+      if (!dt) return;
+      var rot = this.el.getAttribute('rotation');
+      this.el.setAttribute('rotation', {
+        x: rot.x,
+        y: rot.y,
+        z: rot.z + this.data.speed * (dt / 1000)
+      });
+    }
+  });
 
-    <a-entity camera></a-entity>
-  </a-scene>
+  function buildWheel() {
+    var spokesEl = document.querySelector('#spokes');
+    var cabinsEl = document.querySelector('#cabins');
+    var bulbsEl = document.querySelector('#bulbs');
 
-  <script>
-    // คอมโพเนนต์หมุนล้อชิงช้าสวรรค์ ปรับความเร็ว (องศา/วินาที) ได้แบบเรียลไทม์
-    AFRAME.registerComponent('spin', {
-      schema: {
-        speed: { type: 'number', default: 60 },
-        axis:  { type: 'string', default: 'z' }
-      },
-      tick: function (time, timeDelta) {
-        if (!this.data.speed) return;
-        var deg = this.data.speed * (timeDelta / 1000);
-        var rot = this.el.getAttribute('rotation');
-        rot[this.data.axis] = (rot[this.data.axis] + deg) % 360;
-        this.el.setAttribute('rotation', rot);
+    for (var i = 0; i < NUM_CABINS; i++) {
+      var angle = (360 / NUM_CABINS) * i;
+      var rad = angle * Math.PI / 180;
+      var x = RADIUS * Math.cos(rad);
+      var y = RADIUS * Math.sin(rad);
+
+      var spoke = document.createElement('a-cylinder');
+      spoke.setAttribute('radius', 0.008);
+      spoke.setAttribute('height', RADIUS);
+      spoke.setAttribute('color', '#3a4256');
+      spoke.setAttribute('metalness', 0.4);
+      spoke.setAttribute('roughness', 0.6);
+      spoke.setAttribute('position', (x / 2) + ' ' + (y / 2) + ' 0');
+      spoke.setAttribute('rotation', '0 0 ' + (angle - 90));
+      spokesEl.appendChild(spoke);
+
+      var cabin = document.createElement('a-box');
+      cabin.setAttribute('width', 0.075);
+      cabin.setAttribute('height', 0.06);
+      cabin.setAttribute('depth', 0.075);
+      cabin.setAttribute('color', '#c9463d');
+      cabin.setAttribute('metalness', 0.2);
+      cabin.setAttribute('roughness', 0.7);
+      cabin.setAttribute('position', x + ' ' + y + ' 0.035');
+      cabinsEl.appendChild(cabin);
+    }
+
+    for (var j = 0; j < NUM_BULBS; j++) {
+      var bAngle = (360 / NUM_BULBS) * j;
+      var bRad = bAngle * Math.PI / 180;
+      var bx = (RADIUS + 0.015) * Math.cos(bRad);
+      var by = (RADIUS + 0.015) * Math.sin(bRad);
+
+      var bulb = document.createElement('a-sphere');
+      bulb.setAttribute('radius', 0.016);
+      bulb.setAttribute('segments-width', 8);
+      bulb.setAttribute('segments-height', 6);
+      bulb.setAttribute('material', 'shader: flat; color: #3a3a3a');
+      bulb.setAttribute('position', bx + ' ' + by + ' 0.05');
+      bulb.classList.add('bulb-entity');
+      bulbsEl.appendChild(bulb);
+
+      if (j % 4 === 0) {
+        var pl = document.createElement('a-entity');
+        pl.setAttribute('light', 'type: point; intensity: 0; distance: 0.5; color: ' + currentColor);
+        pl.setAttribute('position', bx + ' ' + by + ' 0.06');
+        pl.classList.add('bulb-light');
+        bulbsEl.appendChild(pl);
       }
+    }
+  }
+
+  function applyBulbVisual() {
+    var color = lightsOn ? currentColor : '#3a3a3a';
+    document.querySelectorAll('.bulb-entity').forEach(function (b) {
+      b.setAttribute('material', 'shader: flat; color: ' + color);
+    });
+    document.querySelectorAll('.bulb-light').forEach(function (l) {
+      l.setAttribute('light', 'intensity', lightsOn ? 0.45 : 0);
+      l.setAttribute('light', 'color', currentColor);
+    });
+  }
+
+  function wireUI() {
+    var wheelGroup = document.querySelector('#wheelGroup');
+    var speedSlider = document.querySelector('#speedSlider');
+    var speedValue = document.querySelector('#speedValue');
+    var presetButtons = document.querySelectorAll('.presets button');
+    var powerToggle = document.querySelector('#powerToggle');
+    var powerState = document.querySelector('#powerState');
+    var swatches = document.querySelectorAll('.swatch');
+    var customColor = document.querySelector('#customColor');
+    var statusDot = document.querySelector('#statusDot');
+    var hint = document.querySelector('#hint');
+    var marker = document.querySelector('#hiroMarker');
+
+    function setSpeed(v) {
+      speedSlider.value = v;
+      speedValue.textContent = v;
+      wheelGroup.setAttribute('wheel-spin', 'speed', v);
+    }
+
+    speedSlider.addEventListener('input', function () { setSpeed(this.value); });
+    presetButtons.forEach(function (btn) {
+      btn.addEventListener('click', function () { setSpeed(this.dataset.speed); });
     });
 
-    // คอมโพเนนต์หมุนกลับ ทำให้กระเช้าตั้งตรงตลอดเวลาแม้ล้อจะหมุน (เหมือนชิงช้าสวรรค์จริง)
-    AFRAME.registerComponent('counter-spin', {
-      schema: { target: { type: 'selector' } },
-      tick: function () {
-        if (!this.data.target) return;
-        var rot = this.data.target.getAttribute('rotation');
-        this.el.setAttribute('rotation', { x: 0, y: 0, z: -rot.z });
-      }
+    powerToggle.addEventListener('click', function () {
+      lightsOn = !lightsOn;
+      powerToggle.classList.toggle('on', lightsOn);
+      powerToggle.setAttribute('aria-pressed', String(lightsOn));
+      powerState.textContent = lightsOn ? 'เปิด' : 'ปิด';
+      applyBulbVisual();
     });
 
-    // ---------- สร้างท่อเชื่อมระหว่างจุด 2 จุดในสามมิติ ----------
-    function addTube(parent, p1, p2, radius, color) {
-      var v1 = new THREE.Vector3(p1[0], p1[1], p1[2] || 0);
-      var v2 = new THREE.Vector3(p2[0], p2[1], p2[2] || 0);
-      var dir = new THREE.Vector3().subVectors(v2, v1);
-      var length = dir.length();
-      var mid = new THREE.Vector3().addVectors(v1, v2).multiplyScalar(0.5);
-      var quat = new THREE.Quaternion().setFromUnitVectors(
-        new THREE.Vector3(0, 1, 0), dir.clone().normalize()
-      );
-      var euler = new THREE.Euler().setFromQuaternion(quat, 'YXZ');
-
-      var tube = document.createElement('a-cylinder');
-      tube.setAttribute('radius', radius);
-      tube.setAttribute('height', length);
-      tube.setAttribute('color', color);
-      tube.setAttribute('metalness', '0.3');
-      tube.setAttribute('roughness', '0.5');
-      tube.setAttribute('position', { x: mid.x, y: mid.y, z: mid.z });
-      tube.setAttribute('rotation', {
-        x: THREE.MathUtils.radToDeg(euler.x),
-        y: THREE.MathUtils.radToDeg(euler.y),
-        z: THREE.MathUtils.radToDeg(euler.z)
+    function selectColor(hex) {
+      currentColor = hex;
+      customColor.value = hex;
+      swatches.forEach(function (s) {
+        s.classList.toggle('active', s.dataset.color.toLowerCase() === hex.toLowerCase());
       });
-      parent.appendChild(tube);
+      applyBulbVisual();
     }
-
-    var hubY = 0.6;
-
-    // วางจุดสีขาวเล็กๆ เรียงตามแนวเส้นระหว่าง p1-p2 (เลียนแบบหมุดย้ำบนขาเหล็ก)
-    function addDotsAlong(parent, p1, p2, count, radius, color) {
-      for (var i = 1; i <= count; i++) {
-        var t = i / (count + 1);
-        var dot = document.createElement('a-sphere');
-        dot.setAttribute('radius', radius);
-        dot.setAttribute('color', color);
-        dot.setAttribute('position', {
-          x: p1[0] + (p2[0] - p1[0]) * t,
-          y: p1[1] + (p2[1] - p1[1]) * t,
-          z: (p1[2] || 0) + ((p2[2] || 0) - (p1[2] || 0)) * t
-        });
-        parent.appendChild(dot);
-      }
-    }
-
-    function buildSupports() {
-      var group = document.getElementById('supports');
-      var baseX = 0.4, baseZ = 0.22;
-      var legColor = '#2980b9';
-
-      // ขาตั้งรูปตัว A สีน้ำเงินทั้งด้านหน้าและด้านหลัง พร้อมหมุดขาว
-      var legs = [
-        [[-baseX, 0, -baseZ], [0, hubY, -baseZ]],
-        [[ baseX, 0, -baseZ], [0, hubY, -baseZ]],
-        [[-baseX, 0,  baseZ], [0, hubY,  baseZ]],
-        [[ baseX, 0,  baseZ], [0, hubY,  baseZ]]
-      ];
-      legs.forEach(function (leg) {
-        addTube(group, leg[0], leg[1], 0.045, legColor);
-        addDotsAlong(group, leg[0], leg[1], 5, 0.018, '#ffffff');
-      });
-
-      // เพลากลางเชื่อมสองด้าน
-      addTube(group, [0, hubY, -baseZ], [0, hubY, baseZ], 0.05, '#7f8c8d');
-
-      // คานฐานเชื่อมความมั่นคง
-      addTube(group, [-baseX, 0, -baseZ], [-baseX, 0, baseZ], 0.022, '#2c3e50');
-      addTube(group, [ baseX, 0, -baseZ], [ baseX, 0, baseZ], 0.022, '#2c3e50');
-    }
-
-    function buildSpokesAndCabins() {
-      var group = document.getElementById('spokesAndCabins');
-      var R = 0.42;
-      var starR = 0.32;
-      var cabinColors = ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71',
-                          '#1abc9c', '#3498db', '#9b59b6', '#fd79a8'];
-      var spokeColors = ['#f39c12', '#f1c40f'];
-      var count = 8;
-      var rimPoints = [];
-
-      for (var i = 0; i < count; i++) {
-        var theta = (i * 2 * Math.PI) / count;
-        rimPoints.push([starR * Math.sin(theta), starR * Math.cos(theta)]);
-      }
-
-      // เส้นซี่ล้อรัศมี สลับสีส้ม/เหลืองให้ดูเป็นลายดาว
-      for (var s = 0; s < count; s++) {
-        addTube(group, [0, 0, 0], rimPoints[s], 0.018, spokeColors[s % 2]);
-      }
-
-      // เส้นทแยงเชื่อมจุดขอบวงข้ามกัน (จุด i ไป i+3) ให้เกิดลายดาว 8 แฉก
-      for (var k = 0; k < count; k++) {
-        addTube(group, rimPoints[k], rimPoints[(k + 3) % count], 0.012, '#f1c40f');
-      }
-
-      // ดวงไฟเล็กๆ เรียงรอบขอบวงแหวนนอก
-      var lightCount = 24;
-      for (var l = 0; l < lightCount; l++) {
-        var lt = (l * 2 * Math.PI) / lightCount;
-        var bulb = document.createElement('a-sphere');
-        bulb.setAttribute('radius', '0.012');
-        bulb.setAttribute('color', '#fff9e6');
-        bulb.setAttribute('position', {
-          x: 0.44 * Math.sin(lt),
-          y: 0.44 * Math.cos(lt),
-          z: 0
-        });
-        group.appendChild(bulb);
-      }
-
-      for (var i = 0; i < count; i++) {
-        var theta = (i * 2 * Math.PI) / count;
-        var x = R * Math.sin(theta);
-        var y = R * Math.cos(theta);
-
-        // จุดยึดกระเช้าที่ขอบวง (หมุนไปพร้อมล้อ)
-        var pivot = document.createElement('a-entity');
-        pivot.setAttribute('position', { x: x, y: y, z: 0 });
-
-        // ตัวกระเช้า หมุนกลับอัตโนมัติให้ตั้งตรงเสมอ
-        var upright = document.createElement('a-entity');
-        upright.setAttribute('counter-spin', 'target: #wheel');
-
-        var rod = document.createElement('a-cylinder');
-        rod.setAttribute('radius', '0.012');
-        rod.setAttribute('height', '0.1');
-        rod.setAttribute('position', '0 -0.05 0');
-        rod.setAttribute('color', '#7f8c8d');
-
-        var cabin = document.createElement('a-box');
-        cabin.setAttribute('width', '0.13');
-        cabin.setAttribute('height', '0.11');
-        cabin.setAttribute('depth', '0.13');
-        cabin.setAttribute('position', '0 -0.15 0');
-        cabin.setAttribute('color', cabinColors[i % cabinColors.length]);
-
-        var roof = document.createElement('a-cylinder');
-        roof.setAttribute('radius', '0.08');
-        roof.setAttribute('height', '0.015');
-        roof.setAttribute('position', '0 -0.095 0');
-        roof.setAttribute('color', '#2d3436');
-
-        upright.appendChild(rod);
-        upright.appendChild(cabin);
-        upright.appendChild(roof);
-        pivot.appendChild(upright);
-        group.appendChild(pivot);
-      }
-    }
-
-    buildSupports();
-    buildSpokesAndCabins();
-
-    var currentSpeed = 60;
-    var isPlaying = true;
-
-    function applySpeed() {
-      document.querySelector('#wheel').setAttribute('spin', 'speed', isPlaying ? currentSpeed : 0);
-    }
-
-    function setPreset(speed, btn) {
-      currentSpeed = speed;
-      document.getElementById('speedSlider').value = speed;
-      document.querySelectorAll('.speed-row button').forEach(function (b) {
-        b.classList.remove('active');
-      });
-      btn.classList.add('active');
-      if (!isPlaying) { togglePlay(); } else { applySpeed(); }
-    }
-
-    function togglePlay() {
-      isPlaying = !isPlaying;
-      var btn = document.getElementById('playPauseBtn');
-      if (isPlaying) {
-        btn.textContent = '⏸ หยุดหมุน';
-        btn.classList.remove('paused');
-      } else {
-        btn.textContent = '▶ หมุนต่อ';
-        btn.classList.add('paused');
-      }
-      applySpeed();
-    }
-
-    document.getElementById('speedSlider').addEventListener('input', function (e) {
-      currentSpeed = parseInt(e.target.value, 10);
-      document.querySelectorAll('.speed-row button').forEach(function (b) {
-        b.classList.remove('active');
-      });
-      if (!isPlaying) { togglePlay(); return; }
-      applySpeed();
+    swatches.forEach(function (s) {
+      s.addEventListener('click', function () { selectColor(this.dataset.color); });
     });
-  </script>
+    customColor.addEventListener('input', function () { selectColor(this.value); });
 
+    marker.addEventListener('markerFound', function () {
+      statusDot.classList.add('found');
+      hint.textContent = 'พบมาร์กเกอร์แล้ว';
+    });
+    marker.addEventListener('markerLost', function () {
+      statusDot.classList.remove('found');
+      hint.textContent = 'ส่องกล้องไปที่ Hiro Marker';
+    });
+
+    setSpeed(0);
+    selectColor(currentColor);
+  }
+
+  buildWheel();
+  wireUI();
+})();
+</script>
 </body>
 </html>
