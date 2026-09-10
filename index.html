@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+<title>AR เครื่องซักผ้า</title>
+
+<script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
+
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
+
+  #ui {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 10px 20px;
+    background: linear-gradient(to top, rgba(0,0,0,0.65), rgba(0,0,0,0));
+    pointer-events: none;
+  }
+  #ui * { pointer-events: auto; }
+
+  #title {
+    position: fixed;
+    top: 10px; left: 0; right: 0;
+    z-index: 9999;
+    text-align: center;
+    color: #fff;
+    font-size: 15px;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+    pointer-events: none;
+  }
+
+  .speed-row { display: flex; gap: 8px; }
+
+  button {
+    border: none;
+    border-radius: 10px;
+    padding: 10px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    background: #ffffff;
+    color: #222;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+  }
+  button.active {
+    background: #2e86de;
+    color: #fff;
+  }
+  #playPauseBtn {
+    background: #e74c3c;
+    color: #fff;
+    min-width: 110px;
+  }
+  #playPauseBtn.paused {
+    background: #27ae60;
+  }
+
+  .slider-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 90%;
+    max-width: 380px;
+    color: #fff;
+    font-size: 13px;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+  }
+  #speedSlider { flex: 1; }
+</style>
+</head>
+
+<body style="margin:0; overflow:hidden;">
+
+  <div id="title">ส่อง Hiro Marker เพื่อดูเครื่องซักผ้า AR</div>
+
+  <div id="ui">
+    <div class="slider-row">
+      <span>ช้า</span>
+      <input type="range" id="speedSlider" min="0" max="400" value="90">
+      <span>เร็ว</span>
+    </div>
+    <div class="speed-row">
+      <button id="btnSlow" onclick="setPreset(40, this)">ช้า</button>
+      <button id="btnMed" class="active" onclick="setPreset(90, this)">ปานกลาง</button>
+      <button id="btnFast" onclick="setPreset(200, this)">เร็ว</button>
+      <button id="btnTurbo" onclick="setPreset(350, this)">ปั่นหมาด</button>
+    </div>
+    <button id="playPauseBtn" onclick="togglePlay()">⏸ หยุด</button>
+  </div>
+
+  <a-scene
+    embedded
+    vr-mode-ui="enabled: false"
+    renderer="logarithmicDepthBuffer: true; precision: medium;"
+    arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
+
+    <a-assets></a-assets>
+
+    <a-marker preset="hiro" id="marker">
+      <a-entity position="0 0.7 0" scale="0.55 0.55 0.55">
+
+        <!-- ============ ตัวเครื่องซักผ้า (สีขาว) ============ -->
+        <a-box position="0 0 0" width="1" height="1.2" depth="0.8"
+               color="#f5f5f5" metalness="0.1" roughness="0.6"></a-box>
+
+        <!-- แผงควบคุมด้านบน -->
+        <a-box position="0 0.5 0.41" width="0.95" height="0.15" depth="0.03"
+               color="#d8d8d8"></a-box>
+        <a-cylinder position="-0.35 0.5 0.43" radius="0.045" height="0.02"
+                    rotation="90 0 0" color="#2e86de"></a-cylinder>
+        <a-cylinder position="-0.15 0.5 0.43" radius="0.045" height="0.02"
+                    rotation="90 0 0" color="#7f8c8d"></a-cylinder>
+        <a-text value="START" position="0.05 0.5 0.435" scale="0.25 0.25 0.25"
+                color="#333" align="center"></a-text>
+
+        <!-- กรอบประตูเครื่อง (ห่วงสีเทาเข้ม) -->
+        <a-torus position="0 -0.08 0.41" radius="0.34" radius-tubular="0.035"
+                 rotation="90 0 0" color="#4a4a4a" segments-tubular="24"></a-torus>
+
+        <!-- กระจกประตู (โปร่งแสงสีเข้ม) -->
+        <a-circle position="0 -0.08 0.395" radius="0.30" rotation="0 0 0"
+                  color="#111111" opacity="0.55" transparent="true" side="double"></a-circle>
+
+        <!-- ============ ถังซัก (หมุนได้) ============ -->
+        <a-entity id="drum" position="0 -0.08 0.15" spin="speed: 90; axis: z">
+          <!-- ตัวถังซัก -->
+          <a-cylinder radius="0.26" height="0.34" rotation="90 0 0"
+                      color="#8a8f94" metalness="0.6" roughness="0.4" side="double"></a-cylinder>
+          <!-- ผ้าในเครื่อง -->
+          <a-sphere position="0.13 0.08 0" radius="0.07" color="#e74c3c"></a-sphere>
+          <a-box position="-0.1 0.1 0.02" width="0.13" height="0.09" depth="0.1"
+                 color="#f1c40f"></a-box>
+          <a-sphere position="0.02 -0.14 -0.02" radius="0.08" color="#2e86de"></a-sphere>
+          <a-box position="-0.12 -0.08 0.03" width="0.1" height="0.1" depth="0.09"
+                 color="#27ae60"></a-box>
+          <a-sphere position="0.15 -0.05 0.03" radius="0.055" color="#ecf0f1"></a-sphere>
+        </a-entity>
+
+        <!-- ============ ขาตั้ง 4 มุม ============ -->
+        <a-cylinder position="-0.42 -0.65 0.32" radius="0.035" height="0.1" color="#555"></a-cylinder>
+        <a-cylinder position="0.42 -0.65 0.32" radius="0.035" height="0.1" color="#555"></a-cylinder>
+        <a-cylinder position="-0.42 -0.65 -0.32" radius="0.035" height="0.1" color="#555"></a-cylinder>
+        <a-cylinder position="0.42 -0.65 -0.32" radius="0.035" height="0.1" color="#555"></a-cylinder>
+
+      </a-entity>
+    </a-marker>
+
+    <a-entity camera></a-entity>
+  </a-scene>
+
+  <script>
+    // คอมโพเนนต์สำหรับหมุนถังซักผ้า ปรับความเร็ว (องศา/วินาที) ได้แบบเรียลไทม์
+    AFRAME.registerComponent('spin', {
+      schema: {
+        speed: { type: 'number', default: 90 }, // องศาต่อวินาที
+        axis:  { type: 'string', default: 'z' }
+      },
+      tick: function (time, timeDelta) {
+        if (!this.data.speed) return;
+        var deg = this.data.speed * (timeDelta / 1000);
+        var rot = this.el.getAttribute('rotation');
+        rot[this.data.axis] = (rot[this.data.axis] + deg) % 360;
+        this.el.setAttribute('rotation', rot);
+      }
+    });
+
+    var currentSpeed = 90;
+    var isPlaying = true;
+
+    function applySpeed() {
+      var drum = document.querySelector('#drum');
+      drum.setAttribute('spin', 'speed', isPlaying ? currentSpeed : 0);
+    }
+
+    function setPreset(speed, btn) {
+      currentSpeed = speed;
+      document.getElementById('speedSlider').value = speed;
+      document.querySelectorAll('.speed-row button').forEach(function (b) {
+        b.classList.remove('active');
+      });
+      btn.classList.add('active');
+      if (!isPlaying) { togglePlay(); } else { applySpeed(); }
+    }
+
+    function togglePlay() {
+      isPlaying = !isPlaying;
+      var btn = document.getElementById('playPauseBtn');
+      if (isPlaying) {
+        btn.textContent = '⏸ หยุด';
+        btn.classList.remove('paused');
+      } else {
+        btn.textContent = '▶ เดินเครื่อง';
+        btn.classList.add('paused');
+      }
+      applySpeed();
+    }
+
+    document.getElementById('speedSlider').addEventListener('input', function (e) {
+      currentSpeed = parseInt(e.target.value, 10);
+      document.querySelectorAll('.speed-row button').forEach(function (b) {
+        b.classList.remove('active');
+      });
+      if (!isPlaying) { togglePlay(); return; }
+      applySpeed();
+    });
+  </script>
+
+</body>
+</html>
