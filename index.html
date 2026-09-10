@@ -111,9 +111,17 @@
 
         <!-- ============ ล้อชิงช้าสวรรค์ (หมุนได้) ============ -->
         <a-entity id="wheel" position="0 0.6 0" spin="speed: 60; axis: z">
-          <a-torus radius="0.42" radius-tubular="0.028" rotation="90 0 0"
+          <!-- วงแหวนซ้อนชั้นแบบชิงช้าสวรรค์จริง -->
+          <a-torus radius="0.44" radius-tubular="0.020" rotation="90 0 0"
                    color="#e74c3c" segments-tubular="32"></a-torus>
-          <a-sphere radius="0.07" color="#2d3436"></a-sphere>
+          <a-torus radius="0.39" radius-tubular="0.013" rotation="90 0 0"
+                   color="#95a5a6" segments-tubular="32"></a-torus>
+          <a-torus radius="0.34" radius-tubular="0.011" rotation="90 0 0"
+                   color="#8e44ad" segments-tubular="32"></a-torus>
+          <!-- ดุมกลางแบบวงแหวนมีรู -->
+          <a-torus radius="0.09" radius-tubular="0.032" rotation="90 0 0"
+                   color="#e67e22"></a-torus>
+          <a-sphere radius="0.025" color="#2d3436"></a-sphere>
           <a-entity id="spokesAndCabins"></a-entity>
         </a-entity>
 
@@ -178,15 +186,38 @@
 
     var hubY = 0.6;
 
+    // วางจุดสีขาวเล็กๆ เรียงตามแนวเส้นระหว่าง p1-p2 (เลียนแบบหมุดย้ำบนขาเหล็ก)
+    function addDotsAlong(parent, p1, p2, count, radius, color) {
+      for (var i = 1; i <= count; i++) {
+        var t = i / (count + 1);
+        var dot = document.createElement('a-sphere');
+        dot.setAttribute('radius', radius);
+        dot.setAttribute('color', color);
+        dot.setAttribute('position', {
+          x: p1[0] + (p2[0] - p1[0]) * t,
+          y: p1[1] + (p2[1] - p1[1]) * t,
+          z: (p1[2] || 0) + ((p2[2] || 0) - (p1[2] || 0)) * t
+        });
+        parent.appendChild(dot);
+      }
+    }
+
     function buildSupports() {
       var group = document.getElementById('supports');
       var baseX = 0.4, baseZ = 0.22;
+      var legColor = '#2980b9';
 
-      // ขาตั้งรูปตัว A ทั้งด้านหน้าและด้านหลัง
-      addTube(group, [-baseX, 0, -baseZ], [0, hubY, -baseZ], 0.03, '#34495e');
-      addTube(group, [ baseX, 0, -baseZ], [0, hubY, -baseZ], 0.03, '#34495e');
-      addTube(group, [-baseX, 0,  baseZ], [0, hubY,  baseZ], 0.03, '#34495e');
-      addTube(group, [ baseX, 0,  baseZ], [0, hubY,  baseZ], 0.03, '#34495e');
+      // ขาตั้งรูปตัว A สีน้ำเงินทั้งด้านหน้าและด้านหลัง พร้อมหมุดขาว
+      var legs = [
+        [[-baseX, 0, -baseZ], [0, hubY, -baseZ]],
+        [[ baseX, 0, -baseZ], [0, hubY, -baseZ]],
+        [[-baseX, 0,  baseZ], [0, hubY,  baseZ]],
+        [[ baseX, 0,  baseZ], [0, hubY,  baseZ]]
+      ];
+      legs.forEach(function (leg) {
+        addTube(group, leg[0], leg[1], 0.045, legColor);
+        addDotsAlong(group, leg[0], leg[1], 5, 0.018, '#ffffff');
+      });
 
       // เพลากลางเชื่อมสองด้าน
       addTube(group, [0, hubY, -baseZ], [0, hubY, baseZ], 0.05, '#7f8c8d');
@@ -199,17 +230,47 @@
     function buildSpokesAndCabins() {
       var group = document.getElementById('spokesAndCabins');
       var R = 0.42;
+      var starR = 0.32;
       var cabinColors = ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71',
                           '#1abc9c', '#3498db', '#9b59b6', '#fd79a8'];
+      var spokeColors = ['#f39c12', '#f1c40f'];
       var count = 8;
+      var rimPoints = [];
+
+      for (var i = 0; i < count; i++) {
+        var theta = (i * 2 * Math.PI) / count;
+        rimPoints.push([starR * Math.sin(theta), starR * Math.cos(theta)]);
+      }
+
+      // เส้นซี่ล้อรัศมี สลับสีส้ม/เหลืองให้ดูเป็นลายดาว
+      for (var s = 0; s < count; s++) {
+        addTube(group, [0, 0, 0], rimPoints[s], 0.018, spokeColors[s % 2]);
+      }
+
+      // เส้นทแยงเชื่อมจุดขอบวงข้ามกัน (จุด i ไป i+3) ให้เกิดลายดาว 8 แฉก
+      for (var k = 0; k < count; k++) {
+        addTube(group, rimPoints[k], rimPoints[(k + 3) % count], 0.012, '#f1c40f');
+      }
+
+      // ดวงไฟเล็กๆ เรียงรอบขอบวงแหวนนอก
+      var lightCount = 24;
+      for (var l = 0; l < lightCount; l++) {
+        var lt = (l * 2 * Math.PI) / lightCount;
+        var bulb = document.createElement('a-sphere');
+        bulb.setAttribute('radius', '0.012');
+        bulb.setAttribute('color', '#fff9e6');
+        bulb.setAttribute('position', {
+          x: 0.44 * Math.sin(lt),
+          y: 0.44 * Math.cos(lt),
+          z: 0
+        });
+        group.appendChild(bulb);
+      }
 
       for (var i = 0; i < count; i++) {
         var theta = (i * 2 * Math.PI) / count;
         var x = R * Math.sin(theta);
         var y = R * Math.cos(theta);
-
-        // ซี่ล้อ จากจุดศูนย์กลางไปขอบวง (หมุนไปพร้อมล้อ)
-        addTube(group, [0, 0, 0], [x, y, 0], 0.016, '#bdc3c7');
 
         // จุดยึดกระเช้าที่ขอบวง (หมุนไปพร้อมล้อ)
         var pivot = document.createElement('a-entity');
