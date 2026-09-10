@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-<title>AR เครื่องซักผ้า</title>
+<title>AR จักรยานสีสัน</title>
 
 <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
@@ -77,21 +77,21 @@
 
 <body style="margin:0; overflow:hidden;">
 
-  <div id="title">ส่อง Hiro Marker เพื่อดูเครื่องซักผ้า AR</div>
+  <div id="title">ส่อง Hiro Marker เพื่อดูจักรยาน AR</div>
 
   <div id="ui">
     <div class="slider-row">
-      <span>ช้า</span>
-      <input type="range" id="speedSlider" min="0" max="400" value="90">
-      <span>เร็ว</span>
+      <span>ล้อช้า</span>
+      <input type="range" id="speedSlider" min="0" max="500" value="120">
+      <span>ล้อเร็ว</span>
     </div>
     <div class="speed-row">
-      <button id="btnSlow" onclick="setPreset(40, this)">ช้า</button>
-      <button id="btnMed" class="active" onclick="setPreset(90, this)">ปานกลาง</button>
-      <button id="btnFast" onclick="setPreset(200, this)">เร็ว</button>
-      <button id="btnTurbo" onclick="setPreset(350, this)">ปั่นหมาด</button>
+      <button id="btnSlow" onclick="setPreset(50, this)">ปั่นช้า</button>
+      <button id="btnMed" class="active" onclick="setPreset(120, this)">ปกติ</button>
+      <button id="btnFast" onclick="setPreset(260, this)">ปั่นเร็ว</button>
+      <button id="btnTurbo" onclick="setPreset(420, this)">เต็มสปีด</button>
     </div>
-    <button id="playPauseBtn" onclick="togglePlay()">⏸ หยุด</button>
+    <button id="playPauseBtn" onclick="togglePlay()">⏸ หยุดล้อ</button>
   </div>
 
   <a-scene
@@ -103,50 +103,51 @@
     <a-assets></a-assets>
 
     <a-marker preset="hiro" id="marker">
-      <a-entity position="0 0.7 0" scale="0.55 0.55 0.55">
+      <a-entity id="bikeGroup" position="0 0 0" scale="0.8 0.8 0.8">
 
-        <!-- ============ ตัวเครื่องซักผ้า (สีขาว) ============ -->
-        <a-box position="0 0 0" width="1" height="1.2" depth="0.8"
-               color="#f5f5f5" metalness="0.1" roughness="0.6"></a-box>
-
-        <!-- แผงควบคุมด้านบน -->
-        <a-box position="0 0.5 0.41" width="0.95" height="0.15" depth="0.03"
-               color="#d8d8d8"></a-box>
-        <a-cylinder position="-0.35 0.5 0.43" radius="0.045" height="0.02"
-                    rotation="90 0 0" color="#2e86de"></a-cylinder>
-        <a-cylinder position="-0.15 0.5 0.43" radius="0.045" height="0.02"
-                    rotation="90 0 0" color="#7f8c8d"></a-cylinder>
-        <a-text value="START" position="0.05 0.5 0.435" scale="0.25 0.25 0.25"
-                color="#333" align="center"></a-text>
-
-        <!-- กรอบประตูเครื่อง (ห่วงสีเทาเข้ม) -->
-        <a-torus position="0 -0.08 0.41" radius="0.34" radius-tubular="0.035"
-                 rotation="90 0 0" color="#4a4a4a" segments-tubular="24"></a-torus>
-
-        <!-- กระจกประตู (โปร่งแสงสีเข้ม) -->
-        <a-circle position="0 -0.08 0.395" radius="0.30" rotation="0 0 0"
-                  color="#111111" opacity="0.55" transparent="true" side="double"></a-circle>
-
-        <!-- ============ ถังซัก (หมุนได้) ============ -->
-        <a-entity id="drum" position="0 -0.08 0.15" spin="speed: 90; axis: z">
-          <!-- ตัวถังซัก -->
-          <a-cylinder radius="0.26" height="0.34" rotation="90 0 0"
-                      color="#8a8f94" metalness="0.6" roughness="0.4" side="double"></a-cylinder>
-          <!-- ผ้าในเครื่อง -->
-          <a-sphere position="0.13 0.08 0" radius="0.07" color="#e74c3c"></a-sphere>
-          <a-box position="-0.1 0.1 0.02" width="0.13" height="0.09" depth="0.1"
-                 color="#f1c40f"></a-box>
-          <a-sphere position="0.02 -0.14 -0.02" radius="0.08" color="#2e86de"></a-sphere>
-          <a-box position="-0.12 -0.08 0.03" width="0.1" height="0.1" depth="0.09"
-                 color="#27ae60"></a-box>
-          <a-sphere position="0.15 -0.05 0.03" radius="0.055" color="#ecf0f1"></a-sphere>
+        <!-- ============ ล้อหลัง (หมุนได้) ============ -->
+        <a-entity id="wheelRear" position="-0.4 0.28 0" spin="speed: 120; axis: z">
+          <a-torus radius="0.28" radius-tubular="0.035" rotation="90 0 0"
+                   color="#1c1c1c" segments-tubular="24"></a-torus>
+          <a-cylinder radius="0.23" height="0.02" rotation="90 0 0"
+                      color="#00cec9" metalness="0.6" roughness="0.3"></a-cylinder>
+          <a-sphere radius="0.045" color="#2d3436"></a-sphere>
+          <a-box width="0.015" height="0.42" depth="0.012" color="#dfe6e9"></a-box>
+          <a-box width="0.015" height="0.42" depth="0.012" rotation="0 0 60" color="#dfe6e9"></a-box>
+          <a-box width="0.015" height="0.42" depth="0.012" rotation="0 0 120" color="#dfe6e9"></a-box>
         </a-entity>
 
-        <!-- ============ ขาตั้ง 4 มุม ============ -->
-        <a-cylinder position="-0.42 -0.65 0.32" radius="0.035" height="0.1" color="#555"></a-cylinder>
-        <a-cylinder position="0.42 -0.65 0.32" radius="0.035" height="0.1" color="#555"></a-cylinder>
-        <a-cylinder position="-0.42 -0.65 -0.32" radius="0.035" height="0.1" color="#555"></a-cylinder>
-        <a-cylinder position="0.42 -0.65 -0.32" radius="0.035" height="0.1" color="#555"></a-cylinder>
+        <!-- ============ ล้อหน้า (หมุนได้) ============ -->
+        <a-entity id="wheelFront" position="0.4 0.28 0" spin="speed: 120; axis: z">
+          <a-torus radius="0.28" radius-tubular="0.035" rotation="90 0 0"
+                   color="#1c1c1c" segments-tubular="24"></a-torus>
+          <a-cylinder radius="0.23" height="0.02" rotation="90 0 0"
+                      color="#fd79a8" metalness="0.6" roughness="0.3"></a-cylinder>
+          <a-sphere radius="0.045" color="#2d3436"></a-sphere>
+          <a-box width="0.015" height="0.42" depth="0.012" color="#dfe6e9"></a-box>
+          <a-box width="0.015" height="0.42" depth="0.012" rotation="0 0 60" color="#dfe6e9"></a-box>
+          <a-box width="0.015" height="0.42" depth="0.012" rotation="0 0 120" color="#dfe6e9"></a-box>
+        </a-entity>
+
+        <!-- ============ โครงเฟรม (สร้างด้วยสคริปต์) ============ -->
+        <a-entity id="bikeFrame"></a-entity>
+
+        <!-- อานจักรยาน -->
+        <a-cylinder position="-0.20 0.64 0" radius="0.02" height="0.08" color="#636e72"></a-cylinder>
+        <a-box position="-0.23 0.71 0" width="0.24" height="0.045" depth="0.1"
+               rotation="0 0 -8" color="#2d3436"></a-box>
+
+        <!-- แฮนด์และก้านแฮนด์ -->
+        <a-cylinder position="0.33 0.68 0" radius="0.022" height="0.34" rotation="90 0 0"
+                    color="#00b894"></a-cylinder>
+        <a-sphere position="0.33 0.68 0.17" radius="0.03" color="#ff7675"></a-sphere>
+        <a-sphere position="0.33 0.68 -0.17" radius="0.03" color="#ff7675"></a-sphere>
+
+        <!-- ล้อบันได/ขาจาน -->
+        <a-cylinder position="-0.08 0.14 0" radius="0.02" height="0.3" rotation="90 0 0"
+                    color="#fdcb6e"></a-cylinder>
+        <a-box position="-0.08 0.05 0.15" width="0.06" height="0.02" depth="0.09" color="#2d3436"></a-box>
+        <a-box position="-0.08 0.05 -0.15" width="0.06" height="0.02" depth="0.09" color="#2d3436"></a-box>
 
       </a-entity>
     </a-marker>
@@ -155,7 +156,7 @@
   </a-scene>
 
   <script>
-    // คอมโพเนนต์สำหรับหมุนถังซักผ้า ปรับความเร็ว (องศา/วินาที) ได้แบบเรียลไทม์
+    // คอมโพเนนต์สำหรับหมุนล้อจักรยาน ปรับความเร็ว (องศา/วินาที) ได้แบบเรียลไทม์
     AFRAME.registerComponent('spin', {
       schema: {
         speed: { type: 'number', default: 90 }, // องศาต่อวินาที
@@ -170,12 +171,55 @@
       }
     });
 
-    var currentSpeed = 90;
+    // ---------- สร้างท่อเฟรมจักรยานระหว่างจุด 2 จุดแบบสีสันสวยงาม ----------
+    function addTube(parent, p1, p2, radius, color) {
+      var dx = p2[0] - p1[0];
+      var dy = p2[1] - p1[1];
+      var length = Math.sqrt(dx * dx + dy * dy);
+      var angleDeg = Math.atan2(-dx, dy) * 180 / Math.PI;
+
+      var tube = document.createElement('a-cylinder');
+      tube.setAttribute('radius', radius);
+      tube.setAttribute('height', length);
+      tube.setAttribute('color', color);
+      tube.setAttribute('metalness', '0.3');
+      tube.setAttribute('roughness', '0.4');
+      tube.setAttribute('position', {
+        x: (p1[0] + p2[0]) / 2,
+        y: (p1[1] + p2[1]) / 2,
+        z: 0
+      });
+      tube.setAttribute('rotation', { x: 0, y: 0, z: angleDeg });
+      parent.appendChild(tube);
+    }
+
+    function buildBikeFrame() {
+      var frame = document.getElementById('bikeFrame');
+
+      var rearHub    = [-0.40, 0.28];
+      var frontHub   = [ 0.40, 0.28];
+      var bb         = [-0.08, 0.14];
+      var seatTop    = [-0.20, 0.60];
+      var headTop    = [ 0.33, 0.55];
+      var headBottom = [ 0.36, 0.24];
+
+      addTube(frame, rearHub, bb,         0.026, '#e67e22'); // ก้านล่างหลัง (ส้ม)
+      addTube(frame, rearHub, seatTop,    0.024, '#e74c3c'); // ก้านที่นั่งหลัง (แดง)
+      addTube(frame, bb, seatTop,         0.03,  '#f1c40f'); // ท่อที่นั่ง (เหลือง)
+      addTube(frame, seatTop, headTop,    0.028, '#2ecc71'); // ท่อบน (เขียว)
+      addTube(frame, bb, headBottom,      0.032, '#3498db'); // ท่อล่าง (น้ำเงิน)
+      addTube(frame, headTop, headBottom, 0.032, '#e84393'); // ท่อคอ (ชมพู)
+      addTube(frame, headBottom, frontHub,0.024, '#9b59b6'); // ตะเกียบหน้า (ม่วง)
+    }
+    buildBikeFrame();
+
+    var currentSpeed = 120;
     var isPlaying = true;
 
     function applySpeed() {
-      var drum = document.querySelector('#drum');
-      drum.setAttribute('spin', 'speed', isPlaying ? currentSpeed : 0);
+      var s = isPlaying ? currentSpeed : 0;
+      document.querySelector('#wheelRear').setAttribute('spin', 'speed', s);
+      document.querySelector('#wheelFront').setAttribute('spin', 'speed', s);
     }
 
     function setPreset(speed, btn) {
@@ -192,10 +236,10 @@
       isPlaying = !isPlaying;
       var btn = document.getElementById('playPauseBtn');
       if (isPlaying) {
-        btn.textContent = '⏸ หยุด';
+        btn.textContent = '⏸ หยุดล้อ';
         btn.classList.remove('paused');
       } else {
-        btn.textContent = '▶ เดินเครื่อง';
+        btn.textContent = '▶ หมุนล้อ';
         btn.classList.add('paused');
       }
       applySpeed();
