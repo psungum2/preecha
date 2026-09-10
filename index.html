@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-<title>AR จักรยานสีสัน</title>
+<title>AR ชิงช้าสวรรค์</title>
 
 <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js@3.4.5/aframe/build/aframe-ar.js"></script>
@@ -77,21 +77,21 @@
 
 <body style="margin:0; overflow:hidden;">
 
-  <div id="title">ส่อง Hiro Marker เพื่อดูจักรยาน AR</div>
+  <div id="title">ส่อง Hiro Marker เพื่อดูชิงช้าสวรรค์ AR</div>
 
   <div id="ui">
     <div class="slider-row">
-      <span>ล้อช้า</span>
-      <input type="range" id="speedSlider" min="0" max="500" value="120">
-      <span>ล้อเร็ว</span>
+      <span>ช้า</span>
+      <input type="range" id="speedSlider" min="0" max="300" value="60">
+      <span>เร็ว</span>
     </div>
     <div class="speed-row">
-      <button id="btnSlow" onclick="setPreset(50, this)">ปั่นช้า</button>
-      <button id="btnMed" class="active" onclick="setPreset(120, this)">ปกติ</button>
-      <button id="btnFast" onclick="setPreset(260, this)">ปั่นเร็ว</button>
-      <button id="btnTurbo" onclick="setPreset(420, this)">เต็มสปีด</button>
+      <button id="btnSlow" onclick="setPreset(25, this)">ช้ามาก</button>
+      <button id="btnMed" class="active" onclick="setPreset(60, this)">ปกติ</button>
+      <button id="btnFast" onclick="setPreset(140, this)">เร็ว</button>
+      <button id="btnTurbo" onclick="setPreset(260, this)">เร็วมาก</button>
     </div>
-    <button id="playPauseBtn" onclick="togglePlay()">⏸ หยุดล้อ</button>
+    <button id="playPauseBtn" onclick="togglePlay()">⏸ หยุดหมุน</button>
   </div>
 
   <a-scene
@@ -103,51 +103,19 @@
     <a-assets></a-assets>
 
     <a-marker preset="hiro" id="marker">
-      <a-entity id="bikeGroup" position="0 0 0" scale="0.8 0.8 0.8">
+      <!-- โครงสร้างทั้งหมดยืนตั้งฉากบน marker เหมือนชิงช้าสวรรค์จริง -->
+      <a-entity id="ferrisGroup" position="0 0 0" scale="0.75 0.75 0.75">
 
-        <!-- ============ ล้อหลัง (หมุนได้) ============ -->
-        <a-entity id="wheelRear" position="-0.4 0.28 0" spin="speed: 120; axis: z">
-          <a-torus radius="0.28" radius-tubular="0.035" rotation="90 0 0"
-                   color="#1c1c1c" segments-tubular="24"></a-torus>
-          <a-cylinder radius="0.23" height="0.02" rotation="90 0 0"
-                      color="#00cec9" metalness="0.6" roughness="0.3"></a-cylinder>
-          <a-sphere radius="0.045" color="#2d3436"></a-sphere>
-          <a-box width="0.015" height="0.42" depth="0.012" color="#dfe6e9"></a-box>
-          <a-box width="0.015" height="0.42" depth="0.012" rotation="0 0 60" color="#dfe6e9"></a-box>
-          <a-box width="0.015" height="0.42" depth="0.012" rotation="0 0 120" color="#dfe6e9"></a-box>
+        <!-- ขาตั้ง + เพลากลาง สร้างด้วยสคริปต์ (คงที่ ไม่หมุน) -->
+        <a-entity id="supports"></a-entity>
+
+        <!-- ============ ล้อชิงช้าสวรรค์ (หมุนได้) ============ -->
+        <a-entity id="wheel" position="0 0.6 0" spin="speed: 60; axis: z">
+          <a-torus radius="0.42" radius-tubular="0.028" rotation="90 0 0"
+                   color="#e74c3c" segments-tubular="32"></a-torus>
+          <a-sphere radius="0.07" color="#2d3436"></a-sphere>
+          <a-entity id="spokesAndCabins"></a-entity>
         </a-entity>
-
-        <!-- ============ ล้อหน้า (หมุนได้) ============ -->
-        <a-entity id="wheelFront" position="0.4 0.28 0" spin="speed: 120; axis: z">
-          <a-torus radius="0.28" radius-tubular="0.035" rotation="90 0 0"
-                   color="#1c1c1c" segments-tubular="24"></a-torus>
-          <a-cylinder radius="0.23" height="0.02" rotation="90 0 0"
-                      color="#fd79a8" metalness="0.6" roughness="0.3"></a-cylinder>
-          <a-sphere radius="0.045" color="#2d3436"></a-sphere>
-          <a-box width="0.015" height="0.42" depth="0.012" color="#dfe6e9"></a-box>
-          <a-box width="0.015" height="0.42" depth="0.012" rotation="0 0 60" color="#dfe6e9"></a-box>
-          <a-box width="0.015" height="0.42" depth="0.012" rotation="0 0 120" color="#dfe6e9"></a-box>
-        </a-entity>
-
-        <!-- ============ โครงเฟรม (สร้างด้วยสคริปต์) ============ -->
-        <a-entity id="bikeFrame"></a-entity>
-
-        <!-- อานจักรยาน -->
-        <a-cylinder position="-0.20 0.64 0" radius="0.02" height="0.08" color="#636e72"></a-cylinder>
-        <a-box position="-0.23 0.71 0" width="0.24" height="0.045" depth="0.1"
-               rotation="0 0 -8" color="#2d3436"></a-box>
-
-        <!-- แฮนด์และก้านแฮนด์ -->
-        <a-cylinder position="0.33 0.68 0" radius="0.022" height="0.34" rotation="90 0 0"
-                    color="#00b894"></a-cylinder>
-        <a-sphere position="0.33 0.68 0.17" radius="0.03" color="#ff7675"></a-sphere>
-        <a-sphere position="0.33 0.68 -0.17" radius="0.03" color="#ff7675"></a-sphere>
-
-        <!-- ล้อบันได/ขาจาน -->
-        <a-cylinder position="-0.08 0.14 0" radius="0.02" height="0.3" rotation="90 0 0"
-                    color="#fdcb6e"></a-cylinder>
-        <a-box position="-0.08 0.05 0.15" width="0.06" height="0.02" depth="0.09" color="#2d3436"></a-box>
-        <a-box position="-0.08 0.05 -0.15" width="0.06" height="0.02" depth="0.09" color="#2d3436"></a-box>
 
       </a-entity>
     </a-marker>
@@ -156,10 +124,10 @@
   </a-scene>
 
   <script>
-    // คอมโพเนนต์สำหรับหมุนล้อจักรยาน ปรับความเร็ว (องศา/วินาที) ได้แบบเรียลไทม์
+    // คอมโพเนนต์หมุนล้อชิงช้าสวรรค์ ปรับความเร็ว (องศา/วินาที) ได้แบบเรียลไทม์
     AFRAME.registerComponent('spin', {
       schema: {
-        speed: { type: 'number', default: 90 }, // องศาต่อวินาที
+        speed: { type: 'number', default: 60 },
         axis:  { type: 'string', default: 'z' }
       },
       tick: function (time, timeDelta) {
@@ -171,55 +139,121 @@
       }
     });
 
-    // ---------- สร้างท่อเฟรมจักรยานระหว่างจุด 2 จุดแบบสีสันสวยงาม ----------
+    // คอมโพเนนต์หมุนกลับ ทำให้กระเช้าตั้งตรงตลอดเวลาแม้ล้อจะหมุน (เหมือนชิงช้าสวรรค์จริง)
+    AFRAME.registerComponent('counter-spin', {
+      schema: { target: { type: 'selector' } },
+      tick: function () {
+        if (!this.data.target) return;
+        var rot = this.data.target.getAttribute('rotation');
+        this.el.setAttribute('rotation', { x: 0, y: 0, z: -rot.z });
+      }
+    });
+
+    // ---------- สร้างท่อเชื่อมระหว่างจุด 2 จุดในสามมิติ ----------
     function addTube(parent, p1, p2, radius, color) {
-      var dx = p2[0] - p1[0];
-      var dy = p2[1] - p1[1];
-      var length = Math.sqrt(dx * dx + dy * dy);
-      var angleDeg = Math.atan2(-dx, dy) * 180 / Math.PI;
+      var v1 = new THREE.Vector3(p1[0], p1[1], p1[2] || 0);
+      var v2 = new THREE.Vector3(p2[0], p2[1], p2[2] || 0);
+      var dir = new THREE.Vector3().subVectors(v2, v1);
+      var length = dir.length();
+      var mid = new THREE.Vector3().addVectors(v1, v2).multiplyScalar(0.5);
+      var quat = new THREE.Quaternion().setFromUnitVectors(
+        new THREE.Vector3(0, 1, 0), dir.clone().normalize()
+      );
+      var euler = new THREE.Euler().setFromQuaternion(quat, 'YXZ');
 
       var tube = document.createElement('a-cylinder');
       tube.setAttribute('radius', radius);
       tube.setAttribute('height', length);
       tube.setAttribute('color', color);
       tube.setAttribute('metalness', '0.3');
-      tube.setAttribute('roughness', '0.4');
-      tube.setAttribute('position', {
-        x: (p1[0] + p2[0]) / 2,
-        y: (p1[1] + p2[1]) / 2,
-        z: 0
+      tube.setAttribute('roughness', '0.5');
+      tube.setAttribute('position', { x: mid.x, y: mid.y, z: mid.z });
+      tube.setAttribute('rotation', {
+        x: THREE.MathUtils.radToDeg(euler.x),
+        y: THREE.MathUtils.radToDeg(euler.y),
+        z: THREE.MathUtils.radToDeg(euler.z)
       });
-      tube.setAttribute('rotation', { x: 0, y: 0, z: angleDeg });
       parent.appendChild(tube);
     }
 
-    function buildBikeFrame() {
-      var frame = document.getElementById('bikeFrame');
+    var hubY = 0.6;
 
-      var rearHub    = [-0.40, 0.28];
-      var frontHub   = [ 0.40, 0.28];
-      var bb         = [-0.08, 0.14];
-      var seatTop    = [-0.20, 0.60];
-      var headTop    = [ 0.33, 0.55];
-      var headBottom = [ 0.36, 0.24];
+    function buildSupports() {
+      var group = document.getElementById('supports');
+      var baseX = 0.4, baseZ = 0.22;
 
-      addTube(frame, rearHub, bb,         0.026, '#e67e22'); // ก้านล่างหลัง (ส้ม)
-      addTube(frame, rearHub, seatTop,    0.024, '#e74c3c'); // ก้านที่นั่งหลัง (แดง)
-      addTube(frame, bb, seatTop,         0.03,  '#f1c40f'); // ท่อที่นั่ง (เหลือง)
-      addTube(frame, seatTop, headTop,    0.028, '#2ecc71'); // ท่อบน (เขียว)
-      addTube(frame, bb, headBottom,      0.032, '#3498db'); // ท่อล่าง (น้ำเงิน)
-      addTube(frame, headTop, headBottom, 0.032, '#e84393'); // ท่อคอ (ชมพู)
-      addTube(frame, headBottom, frontHub,0.024, '#9b59b6'); // ตะเกียบหน้า (ม่วง)
+      // ขาตั้งรูปตัว A ทั้งด้านหน้าและด้านหลัง
+      addTube(group, [-baseX, 0, -baseZ], [0, hubY, -baseZ], 0.03, '#34495e');
+      addTube(group, [ baseX, 0, -baseZ], [0, hubY, -baseZ], 0.03, '#34495e');
+      addTube(group, [-baseX, 0,  baseZ], [0, hubY,  baseZ], 0.03, '#34495e');
+      addTube(group, [ baseX, 0,  baseZ], [0, hubY,  baseZ], 0.03, '#34495e');
+
+      // เพลากลางเชื่อมสองด้าน
+      addTube(group, [0, hubY, -baseZ], [0, hubY, baseZ], 0.05, '#7f8c8d');
+
+      // คานฐานเชื่อมความมั่นคง
+      addTube(group, [-baseX, 0, -baseZ], [-baseX, 0, baseZ], 0.022, '#2c3e50');
+      addTube(group, [ baseX, 0, -baseZ], [ baseX, 0, baseZ], 0.022, '#2c3e50');
     }
-    buildBikeFrame();
 
-    var currentSpeed = 120;
+    function buildSpokesAndCabins() {
+      var group = document.getElementById('spokesAndCabins');
+      var R = 0.42;
+      var cabinColors = ['#e74c3c', '#e67e22', '#f1c40f', '#2ecc71',
+                          '#1abc9c', '#3498db', '#9b59b6', '#fd79a8'];
+      var count = 8;
+
+      for (var i = 0; i < count; i++) {
+        var theta = (i * 2 * Math.PI) / count;
+        var x = R * Math.sin(theta);
+        var y = R * Math.cos(theta);
+
+        // ซี่ล้อ จากจุดศูนย์กลางไปขอบวง (หมุนไปพร้อมล้อ)
+        addTube(group, [0, 0, 0], [x, y, 0], 0.016, '#bdc3c7');
+
+        // จุดยึดกระเช้าที่ขอบวง (หมุนไปพร้อมล้อ)
+        var pivot = document.createElement('a-entity');
+        pivot.setAttribute('position', { x: x, y: y, z: 0 });
+
+        // ตัวกระเช้า หมุนกลับอัตโนมัติให้ตั้งตรงเสมอ
+        var upright = document.createElement('a-entity');
+        upright.setAttribute('counter-spin', 'target: #wheel');
+
+        var rod = document.createElement('a-cylinder');
+        rod.setAttribute('radius', '0.012');
+        rod.setAttribute('height', '0.1');
+        rod.setAttribute('position', '0 -0.05 0');
+        rod.setAttribute('color', '#7f8c8d');
+
+        var cabin = document.createElement('a-box');
+        cabin.setAttribute('width', '0.13');
+        cabin.setAttribute('height', '0.11');
+        cabin.setAttribute('depth', '0.13');
+        cabin.setAttribute('position', '0 -0.15 0');
+        cabin.setAttribute('color', cabinColors[i % cabinColors.length]);
+
+        var roof = document.createElement('a-cylinder');
+        roof.setAttribute('radius', '0.08');
+        roof.setAttribute('height', '0.015');
+        roof.setAttribute('position', '0 -0.095 0');
+        roof.setAttribute('color', '#2d3436');
+
+        upright.appendChild(rod);
+        upright.appendChild(cabin);
+        upright.appendChild(roof);
+        pivot.appendChild(upright);
+        group.appendChild(pivot);
+      }
+    }
+
+    buildSupports();
+    buildSpokesAndCabins();
+
+    var currentSpeed = 60;
     var isPlaying = true;
 
     function applySpeed() {
-      var s = isPlaying ? currentSpeed : 0;
-      document.querySelector('#wheelRear').setAttribute('spin', 'speed', s);
-      document.querySelector('#wheelFront').setAttribute('spin', 'speed', s);
+      document.querySelector('#wheel').setAttribute('spin', 'speed', isPlaying ? currentSpeed : 0);
     }
 
     function setPreset(speed, btn) {
@@ -236,10 +270,10 @@
       isPlaying = !isPlaying;
       var btn = document.getElementById('playPauseBtn');
       if (isPlaying) {
-        btn.textContent = '⏸ หยุดล้อ';
+        btn.textContent = '⏸ หยุดหมุน';
         btn.classList.remove('paused');
       } else {
-        btn.textContent = '▶ หมุนล้อ';
+        btn.textContent = '▶ หมุนต่อ';
         btn.classList.add('paused');
       }
       applySpeed();
